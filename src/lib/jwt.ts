@@ -1,28 +1,37 @@
-import jwt from "jsonwebtoken";
+import {
+    jwtVerify,
+    SignJWT,
+} from "jose";
 
-const JWT_SECRET =
-    process.env.JWT_SECRET!;
+const secret = new TextEncoder().encode(
+    process.env.JWT_SECRET
+);
 
-if (!JWT_SECRET) {
-    throw new Error(
-        "JWT_SECRET is missing in env"
-    );
-}
+export const generateToken =
+    async (payload: any) => {
+        return await new SignJWT(
+            payload
+        )
+            .setProtectedHeader({
+                alg: "HS256",
+            })
+            .setIssuedAt()
+            .setExpirationTime("7d")
+            .sign(secret);
+    };
 
-export const generateToken = (
-    payload: any
-) => {
-    return jwt.sign(payload, JWT_SECRET, {
-        expiresIn: "7d",
-    });
-};
+export const verifyToken =
+    async (token: string) => {
+        try {
+            const {
+                payload,
+            } = await jwtVerify(
+                token,
+                secret
+            );
 
-export const verifyToken = (
-    token: string
-) => {
-    try {
-        return jwt.verify(token, JWT_SECRET);
-    } catch (error) {
-        return null;
-    }
-};
+            return payload;
+        } catch (error) {
+            return null;
+        }
+    };

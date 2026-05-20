@@ -10,7 +10,6 @@ import {
     Mail,
 } from "lucide-react";
 
-import { useRouter } from "next/navigation";
 
 import {
     FormEvent,
@@ -24,6 +23,8 @@ import { Input } from "@/components/ui/input";
 import { useAuthStore } from "@/store/authStore";
 
 import { loginUser } from "@/services/auth/auth.service";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -61,11 +62,9 @@ export default function LoginPage() {
         try {
             setLoading(true);
 
-            setError("");
-
             // Validation
             if (!email || !password) {
-                setError(
+                toast.error(
                     "Please fill all fields"
                 );
 
@@ -81,35 +80,48 @@ export default function LoginPage() {
 
             const data = response.data;
 
+            // Zustand Store
             login(
                 data.user,
                 data.token
             );
 
-            // Role Redirect
-            if (
-                data.user.role === "ADMIN"
+            // Success Toast
+            toast.success(
+                "Login successful"
+            );
+
+            // Redirect Based On Role
+            console.log(data.user.role)
+            switch (
+            data.user.role
             ) {
-                router.push(
-                    "/admin/dashboard"
-                );
-            } else if (
-                data.user.role === "LEAD"
-            ) {
-                router.push(
-                    "/lead/dashboard"
-                );
-            } else {
-                router.push(
-                    "/employee/dashboard"
-                );
+                case "ADMIN":
+                    window.location.href =
+                        "/admin/dashboard";
+                    break;
+
+                case "LEAD":
+                    window.location.href =
+                        "/lead/dashboard";
+                    break;
+
+                case "EMPLOYEE":
+                    window.location.href =
+                        "/employee/dashboard";
+                    break;
+
+                default:
+                    window.location.href =
+                        "/";
             }
         } catch (error: any) {
             console.log(error);
 
-            setError(
-                error.message ||
-                "Something went wrong"
+            toast.error(
+                error?.response?.data
+                    ?.message ||
+                "Login failed"
             );
         } finally {
             setLoading(false);

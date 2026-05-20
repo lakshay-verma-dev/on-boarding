@@ -1,16 +1,23 @@
-import mongoose, { Schema, models } from "mongoose";
+import mongoose, {
+    Schema,
+    models,
+    model,
+} from "mongoose";
 
 const userSchema = new Schema(
     {
         name: {
             type: String,
             required: true,
+            trim: true,
         },
 
         email: {
             type: String,
             required: true,
             unique: true,
+            lowercase: true,
+            trim: true,
         },
 
         password: {
@@ -20,21 +27,52 @@ const userSchema = new Schema(
 
         role: {
             type: String,
-            enum: ["ADMIN", "LEAD", "EMPLOYEE"],
+            enum: [
+                "ADMIN",
+                "LEAD",
+                "EMPLOYEE",
+            ],
             default: "EMPLOYEE",
         },
 
-        designation: {
+        phone: {
             type: String,
+            default: "",
         },
 
         department: {
             type: String,
+            default: "",
         },
 
-        isActive: {
-            type: Boolean,
-            default: true,
+        designation: {
+            type: String,
+            default: "",
+        },
+
+        address: {
+            type: String,
+            default: "",
+        },
+
+        joiningDate: {
+            type: Date,
+            default: Date.now,
+        },
+
+        status: {
+            type: String,
+            enum: [
+                "ACTIVE",
+                "INACTIVE",
+                "ON_LEAVE",
+            ],
+            default: "ACTIVE",
+        },
+
+        avatar: {
+            type: String,
+            default: "",
         },
     },
     {
@@ -42,6 +80,8 @@ const userSchema = new Schema(
     }
 );
 
-const User = models.User || mongoose.model("User", userSchema);
+const User =
+    models.User ||
+    model("User", userSchema);
 
 export default User;

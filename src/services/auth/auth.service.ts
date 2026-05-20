@@ -25,3 +25,8 @@ export const getCurrentUser =
     async () => {
         return api.get("/auth/me");
     };
+
+export const updateCurrentUser =
+    async (data: any) => {
+        return api.put("/auth/me", data);
+    };

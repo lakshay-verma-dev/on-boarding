@@ -67,8 +67,8 @@ export async function POST(
         }
 
         // Generate Token
-        const token = generateToken({
-            _id: user._id,
+        const token = await generateToken({
+            _id: user._id.toString(),
             email: user.email,
             role: user.role,
         });
@@ -100,7 +100,7 @@ export async function POST(
                     process.env.NODE_ENV ===
                     "production",
 
-                sameSite: "strict",
+                sameSite: "lax",
 
                 maxAge:
                     7 * 24 * 60 * 60,
