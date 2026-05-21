@@ -1,6 +1,7 @@
 "use client";
 
-import { Bell, LogOut, Search } from "lucide-react";
+import { Bell, LogOut, Search, Settings } from "lucide-react";
+import Link from "next/link";
 import { useEffect } from "react";
 
 import ThemeToggle from "./ThemeToggle";
@@ -38,6 +39,7 @@ export default function Navbar() {
     const name = user?.name || "Loading...";
     const email = user?.email || "";
     const role = user?.role || "";
+    const settingsHref = `/${(role || "ADMIN").toLowerCase()}/settings`;
     const initials = user?.name
         ? user.name
             .split(" ")
@@ -105,6 +107,13 @@ export default function Navbar() {
                                 <p className="text-sm font-medium text-foreground truncate">{email}</p>
                             </div>
                         )}
+                        <Link
+                            href={settingsHref}
+                            className="flex w-full cursor-pointer items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors mb-1"
+                        >
+                            <Settings size={16} />
+                            Settings
+                        </Link>
                         <button
                             onClick={handleLogout}
                             className="flex w-full cursor-pointer items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-red-500 hover:bg-red-500/10 transition-colors"

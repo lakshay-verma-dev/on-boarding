@@ -13,6 +13,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import ThemeToggle from "@/components/common/navbar/ThemeToggle";
 
 export default function ResetPasswordPage() {
     const [showPassword, setShowPassword] =
@@ -25,6 +26,11 @@ export default function ResetPasswordPage() {
 
     return (
         <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-6">
+
+            {/* Theme Toggle */}
+            <div className="absolute right-6 top-6 z-50">
+                <ThemeToggle />
+            </div>
 
             {/* Background */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(124,58,237,0.15),transparent_40%)]" />

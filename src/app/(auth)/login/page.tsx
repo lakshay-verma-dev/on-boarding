@@ -25,6 +25,7 @@ import { useAuthStore } from "@/store/authStore";
 import { loginUser } from "@/services/auth/auth.service";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import ThemeToggle from "@/components/common/navbar/ThemeToggle";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -132,6 +133,11 @@ export default function LoginPage() {
         <>
 
             <main className="relative flex min-h-screen overflow-hidden bg-background">
+
+                {/* Theme Toggle */}
+                <div className="absolute right-6 top-6 z-50">
+                    <ThemeToggle />
+                </div>
 
                 {/* Background */}
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(124,58,237,0.15),transparent_40%)]" />

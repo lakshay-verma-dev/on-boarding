@@ -141,16 +141,43 @@ export async function POST(
 // GET EMPLOYEES
 // =========================
 
-export async function GET() {
+export async function GET(
+    request: Request
+) {
     try {
         await connectDB();
 
+        // =========================
+        // QUERY PARAMS
+        // =========================
+
+        const { searchParams } =
+            new URL(request.url);
+
+        const role =
+            searchParams.get("role");
+
+        // =========================
+        // QUERY
+        // =========================
+
+        const query: any = {
+            role: {
+                $ne: "ADMIN",
+            },
+        };
+
+        // Filter By Role
+        if (role) {
+            query.role = role;
+        }
+
+        // =========================
+        // FETCH EMPLOYEES
+        // =========================
+
         const employees =
-            await User.find({
-                role: {
-                    $ne: "ADMIN",
-                },
-            })
+            await User.find(query)
                 .select("-password")
                 .sort({
                     createdAt: -1,

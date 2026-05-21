@@ -176,7 +176,6 @@ export default function CreateEmployeePage() {
                                 onChange={(e) => setRole(e.target.value)}
                                 className="flex h-12 w-full appearance-none rounded-2xl border border-border bg-background px-4 pr-10 text-sm text-foreground outline-none transition-all duration-300 hover:border-primary/50 focus:border-primary focus:ring-4 focus:ring-primary/10"
                             >
-                                <option value="ADMIN">ADMIN</option>
                                 <option value="LEAD">LEAD</option>
                                 <option value="EMPLOYEE">EMPLOYEE</option>
                             </select>

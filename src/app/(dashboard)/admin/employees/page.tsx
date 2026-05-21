@@ -8,20 +8,26 @@ import {
     Pencil,
     Trash2,
     AlertTriangle,
+    Search,
+    Users,
+    UserCheck,
+    UserMinus,
 } from "lucide-react";
 
 import {
     useEffect,
     useState,
+    ReactNode,
 } from "react";
 
 import { toast } from "sonner";
 
 import PageHeader from "@/components/common/headers/PageHeader";
-
 import DataTable from "@/components/common/tables/DataTable";
+import StatsCard from "@/components/common/cards/StatsCard";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 import {
     AlertDialog,
@@ -33,6 +39,27 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import { deleteEmployee, getEmployees } from "@/services/employee/employee.service";
+
+interface Employee {
+    _id: string;
+    name: string;
+    email: string;
+    department: string;
+    designation: string;
+    role: ReactNode;
+    status: ReactNode;
+    rawStatus: string;
+}
+
+interface RawEmployee {
+    _id: string;
+    name: string;
+    email: string;
+    department: string;
+    designation: string;
+    role: string;
+    status: string;
+}
 
 const employeeColumns = [
     {
@@ -63,10 +90,13 @@ const employeeColumns = [
 
 export default function EmployeesPage() {
     const [employees, setEmployees] =
-        useState<any[]>([]);
+        useState<Employee[]>([]);
 
     const [loading, setLoading] =
         useState(true);
+
+    const [searchQuery, setSearchQuery] =
+        useState("");
 
     const [deleteModalOpen, setDeleteModalOpen] =
         useState(false);
@@ -91,8 +121,10 @@ export default function EmployeesPage() {
 
                 const employeesData =
                     response.data.employees.map(
-                        (employee: any) => ({
+                        (employee: RawEmployee) => ({
                             ...employee,
+
+                            rawStatus: employee.status,
 
                             role: (
                                 <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
@@ -103,7 +135,7 @@ export default function EmployeesPage() {
                             status: (
                                 <span
                                     className={`rounded-full px-3 py-1 text-xs font-medium
-                  ${employee.status ===
+                   ${employee.status ===
                                             "ACTIVE"
                                             ? "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400"
                                             : employee.status ===
@@ -200,11 +232,47 @@ export default function EmployeesPage() {
                 </div>
             ) : (
 
-                <>
+                <div className="mt-8 space-y-6">
 
-                    {/* Empty State */}
-                    {employees.length ===
-                        0 ? (
+                    {/* Stats Grid */}
+                    <div className="grid gap-6 md:grid-cols-3">
+                        <StatsCard
+                            title="Total Employees"
+                            value={employees.length.toString()}
+                            icon={Users}
+                        />
+                        <StatsCard
+                            title="Active Employees"
+                            value={employees.filter(e => e.rawStatus === "ACTIVE").length.toString()}
+                            icon={UserCheck}
+                        />
+                        <StatsCard
+                            title="On Leave"
+                            value={employees.filter(e => e.rawStatus === "ON_LEAVE").length.toString()}
+                            icon={UserMinus}
+                        />
+                    </div>
+
+                    {/* Search Filter Bar */}
+                    {employees.length > 0 && (
+                        <div className="flex items-center gap-4">
+                            <div className="relative w-full max-w-md">
+                                <Search
+                                    size={18}
+                                    className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
+                                />
+                                <Input
+                                    placeholder="Search employees by name..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="h-12 rounded-2xl pl-11"
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Empty State vs Table */}
+                    {employees.length === 0 ? (
                         <div className="flex h-[300px] flex-col items-center justify-center rounded-3xl border border-border bg-card">
 
                             <h2 className="text-xl font-semibold text-foreground">
@@ -227,50 +295,69 @@ export default function EmployeesPage() {
                     ) : (
 
                         <>
+                            {(() => {
+                                const filteredEmployees = employees.filter((employee: Employee) =>
+                                    employee.name.toLowerCase().includes(searchQuery.toLowerCase())
+                                );
 
-                            {/* Table */}
-                            <DataTable
-                                columns={
-                                    employeeColumns
+                                if (filteredEmployees.length === 0) {
+                                    return (
+                                        <div className="flex h-[200px] flex-col items-center justify-center rounded-3xl border border-border bg-card">
+                                            <h2 className="text-xl font-semibold text-foreground">
+                                                No Matching Employees
+                                            </h2>
+                                            <p className="mt-2 text-muted-foreground">
+                                                Try searching for another name.
+                                            </p>
+                                        </div>
+                                    );
                                 }
-                                data={employees}
-                                actions={(row) => (
-                                    <div className="flex items-center justify-end gap-2">
 
-                                        {/* View */}
-                                        <Link
-                                            href={`/admin/employees/${row._id}`}
-                                            className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-background transition-all hover:bg-muted"
-                                        >
-                                            <Eye size={18} />
-                                        </Link>
+                                return (
+                                    <DataTable
+                                        columns={
+                                            employeeColumns
+                                        }
+                                        data={filteredEmployees}
+                                        actions={(row) => (
+                                            <div className="flex items-center justify-end gap-2">
 
-                                        {/* Edit */}
-                                        <Link
-                                            href={`/admin/employees/${row._id}/edit`}
-                                            className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-background transition-all hover:bg-muted"
-                                        >
-                                            <Pencil size={18} />
-                                        </Link>
+                                                {/* View */}
+                                                <Link
+                                                    href={`/admin/employees/${row._id}`}
+                                                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-background transition-all hover:bg-muted"
+                                                >
+                                                    <Eye size={18} />
+                                                </Link>
 
-                                        {/* Delete */}
-                                        <button
-                                            onClick={() =>
-                                                triggerDeleteConfirm(
-                                                    row._id,
-                                                    row.name
-                                                )
-                                            }
-                                            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-border bg-background text-red-500 transition-all hover:bg-red-500/10"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </div>
-                                )}
-                            />
+                                                {/* Edit */}
+                                                <Link
+                                                    href={`/admin/employees/${row._id}/edit`}
+                                                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-background transition-all hover:bg-muted"
+                                                >
+                                                    <Pencil size={18} />
+                                                </Link>
+
+                                                {/* Delete */}
+                                                <button
+                                                    onClick={() =>
+                                                        triggerDeleteConfirm(
+                                                            row._id,
+                                                            row.name
+                                                        )
+                                                    }
+                                                    className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-border bg-background text-red-500 transition-all hover:bg-red-500/10"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </div>
+                                        )}
+                                    />
+                                );
+                            })()}
                         </>
                     )}
-                </>
+                </div>
             )}
 
             {/* Delete Confirmation Modal */}

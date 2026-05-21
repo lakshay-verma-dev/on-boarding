@@ -9,8 +9,6 @@ import {
     ClipboardList,
     FolderKanban,
     LayoutDashboard,
-    Settings,
-    ShieldCheck,
     Users,
     ChevronLeft,
     ChevronRight,
@@ -47,11 +45,7 @@ const sidebarConfig = {
             href: "/admin/tasks",
             icon: ClipboardList,
         },
-        {
-            label: "Settings",
-            href: "/admin/settings",
-            icon: Settings,
-        },
+
     ],
 
     LEAD: [
@@ -75,11 +69,7 @@ const sidebarConfig = {
             href: "/lead/attendance",
             icon: CalendarDays,
         },
-        {
-            label: "Settings",
-            href: "/lead/settings",
-            icon: Settings,
-        },
+
     ],
 
     EMPLOYEE: [
@@ -98,11 +88,7 @@ const sidebarConfig = {
             href: "/employee/attendance",
             icon: CalendarDays,
         },
-        {
-            label: "Settings",
-            href: "/employee/settings",
-            icon: Settings,
-        },
+
     ],
 };
 

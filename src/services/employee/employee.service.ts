@@ -103,3 +103,26 @@ export const deleteEmployee =
             `/employees/${id}`
         );
     };
+
+
+// =========================
+// GET LEADS
+// =========================
+
+export const getLeads =
+    async () => {
+        return api.get(
+            "/employees?role=LEAD"
+        );
+    };
+
+// =========================
+// GET EMPLOYEES ONLY
+// =========================
+
+export const getEmployeesOnly =
+    async () => {
+        return api.get(
+            "/employees?role=EMPLOYEE"
+        );
+    };
