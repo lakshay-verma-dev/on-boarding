@@ -55,19 +55,6 @@ export default function HomeNavbar() {
                     </span>
                 </Link>
 
-                {/* Nav Links - Desktop */}
-                <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
-                    <a href="#features" className="hover:text-primary transition-colors duration-200">
-                        Features
-                    </a>
-                    <a href="#about" className="hover:text-primary transition-colors duration-200">
-                        About
-                    </a>
-                    <a href="#security" className="hover:text-primary transition-colors duration-200">
-                        Security
-                    </a>
-                </nav>
-
                 {/* Right side CTA & Theme */}
                 <div className="flex items-center gap-4">
                     <ThemeToggle />

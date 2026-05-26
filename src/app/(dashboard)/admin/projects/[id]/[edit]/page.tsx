@@ -1,22 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import PageHeader from "@/components/common/headers/PageHeader";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
     FormInput,
     FormSelect,
     FormDatePicker,
     FormTextarea,
+    FormField,
 } from "@/components/ui/form-fields";
 import {
     getEmployeesOnly,
     getLeads,
 } from "@/services/employee/employee.service";
-import { createProject } from "@/services/project/project.service";
+import {
+    getProjectById,
+    updateProject,
+} from "@/services/project/project.service";
 
 const statusOptions = [
     { value: "PENDING", label: "PENDING" },
@@ -30,13 +36,15 @@ const priorityOptions = [
     { value: "HIGH", label: "HIGH" },
 ];
 
-export default function CreateProjectPage() {
+export default function EditProjectPage() {
+    const params = useParams();
     const router = useRouter();
 
     // =========================
     // STATES
     // =========================
     const [loading, setLoading] = useState(false);
+    const [fetching, setFetching] = useState(true);
     const [leads, setLeads] = useState<any[]>([]);
     const [employees, setEmployees] = useState<any[]>([]);
     const [formData, setFormData] = useState({
@@ -44,6 +52,7 @@ export default function CreateProjectPage() {
         description: "",
         status: "PENDING",
         priority: "MEDIUM",
+        progress: 0,
         deadline: "",
         lead: "",
         teamMembers: [] as string[],
@@ -54,22 +63,42 @@ export default function CreateProjectPage() {
     // =========================
     const fetchData = async () => {
         try {
-            const [leadsRes, employeesRes] = await Promise.all([
+            setFetching(true);
+
+            const [projectRes, leadsRes, employeesRes] = await Promise.all([
+                getProjectById(params.id as string),
                 getLeads(),
                 getEmployeesOnly(),
             ]);
 
+            const project = projectRes.data.project;
+
             setLeads(leadsRes.data.employees);
             setEmployees(employeesRes.data.employees);
+
+            setFormData({
+                name: project.name || "",
+                description: project.description || "",
+                status: project.status || "PENDING",
+                priority: project.priority || "MEDIUM",
+                progress: project.progress || 0,
+                deadline: project.deadline?.split("T")[0] || "",
+                lead: project.lead?._id || "",
+                teamMembers: project.teamMembers?.map((member: any) => member._id) || [],
+            });
         } catch (error) {
             console.log(error);
-            toast.error("Failed to load data");
+            toast.error("Failed to fetch project");
+        } finally {
+            setFetching(false);
         }
     };
 
     useEffect(() => {
-        fetchData();
-    }, []);
+        if (params.id) {
+            fetchData();
+        }
+    }, [params.id]);
 
     // =========================
     // HANDLE CHANGE
@@ -103,6 +132,11 @@ export default function CreateProjectPage() {
     // TEAM SELECT
     // =========================
     const handleTeamSelect = (employeeId: string) => {
+        if (employeeId === formData.lead) {
+            toast.error("Lead cannot be a team member");
+            return;
+        }
+
         const exists = formData.teamMembers.includes(employeeId);
 
         if (exists) {
@@ -128,18 +162,29 @@ export default function CreateProjectPage() {
 
         try {
             setLoading(true);
-            await createProject(formData);
-            toast.success("Project created successfully");
-            router.push("/admin/projects");
+            await updateProject(params.id as string, formData);
+            toast.success("Project updated successfully");
+            router.push(`/admin/projects/${params.id}`);
         } catch (error: any) {
             console.log(error);
             toast.error(
-                error?.response?.data?.message || "Failed to create project"
+                error?.response?.data?.message || "Failed to update project"
             );
         } finally {
             setLoading(false);
         }
     };
+
+    // =========================
+    // LOADING
+    // =========================
+    if (fetching) {
+        return (
+            <div className="flex h-[400px] items-center justify-center">
+                <Loader2 size={32} className="animate-spin text-primary" />
+            </div>
+        );
+    }
 
     const leadOptions = leads.map((lead) => ({
         value: lead._id,
@@ -150,18 +195,19 @@ export default function CreateProjectPage() {
         <div>
             {/* Header */}
             <PageHeader
-                title="Create Project"
-                description="Create and manage company projects."
+                title="Edit Project"
+                description="Update project information."
                 breadcrumbs={[
                     { label: "Projects", href: "/admin/projects" },
-                    { label: "Create Project" },
+                    { label: formData.name || "Project", href: `/admin/projects/${params.id}` },
+                    { label: "Edit Project" },
                 ]}
             />
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="rounded-3xl border border-border bg-card p-8">
                 <div className="grid gap-6 md:grid-cols-2">
-                    {/* Name */}
+                    {/* Project Name */}
                     <FormInput
                         label="Project Name"
                         name="name"
@@ -196,6 +242,27 @@ export default function CreateProjectPage() {
                         options={priorityOptions}
                     />
 
+                    {/* Progress */}
+                    <FormField
+                        label="Progress"
+                        containerClassName="md:col-span-2"
+                    >
+                        <div className="flex items-center gap-4">
+                            <Input
+                                type="range"
+                                name="progress"
+                                min="0"
+                                max="100"
+                                value={formData.progress}
+                                onChange={handleChange}
+                                className="cursor-pointer flex-1"
+                            />
+                            <span className="text-sm font-medium text-primary w-12 text-right">
+                                {formData.progress}%
+                            </span>
+                        </div>
+                    </FormField>
+
                     {/* Lead */}
                     <FormSelect
                         label="Project Lead"
@@ -220,7 +287,7 @@ export default function CreateProjectPage() {
 
                 {/* Team Members */}
                 <div className="mt-6">
-                    <label className="mb-4 block text-sm font-medium">
+                    <label className="mb-4 block text-sm font-medium text-foreground">
                         Team Members
                     </label>
 
@@ -228,7 +295,11 @@ export default function CreateProjectPage() {
                         {employees.map((employee) => (
                             <label
                                 key={employee._id}
-                                className="flex cursor-pointer items-center gap-3 rounded-2xl border border-border p-4 transition-all hover:bg-muted"
+                                className={`flex cursor-pointer items-center gap-3 rounded-2xl border p-4 transition-all duration-300
+                                ${formData.teamMembers.includes(employee._id)
+                                        ? "border-primary bg-primary/5"
+                                        : "border-border hover:border-primary/30 hover:bg-primary/5"
+                                    }`}
                             >
                                 <input
                                     type="checkbox"
@@ -241,7 +312,7 @@ export default function CreateProjectPage() {
                                 />
 
                                 <div>
-                                    <p className="font-medium">
+                                    <p className="font-medium text-foreground">
                                         {employee.name}
                                     </p>
                                     <p className="text-xs text-muted-foreground">
@@ -256,13 +327,15 @@ export default function CreateProjectPage() {
                 {/* Actions */}
                 <div className="mt-8 flex items-center gap-4">
                     <Button type="submit" disabled={loading}>
-                        {loading ? "Creating..." : "Create Project"}
+                        {loading ? "Updating..." : "Update Project"}
                     </Button>
 
                     <Button
                         type="button"
                         variant="secondary"
-                        onClick={() => router.push("/admin/projects")}
+                        onClick={() =>
+                            router.push(`/admin/projects/${params.id}`)
+                        }
                     >
                         Cancel
                     </Button>

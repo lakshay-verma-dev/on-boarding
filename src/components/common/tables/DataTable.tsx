@@ -52,7 +52,7 @@ export default function DataTable({
                                 {columns.map((column) => (
                                     <td
                                         key={column.key}
-                                        className="px-6 py-5 text-sm text-muted-foreground"
+                                        className="px-6 py-5 text-sm text-muted-foreground whitespace-nowrap"
                                     >
                                         {row[column.key]}
                                     </td>

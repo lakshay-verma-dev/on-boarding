@@ -26,6 +26,20 @@ import { Button } from "@/components/ui/button";
 
 import { getProjectById } from "@/services/project/project.service";
 
+import {
+    getEmployeesOnly,
+} from "@/services/employee/employee.service";
+
+import {
+    updateProject,
+} from "@/services/project/project.service";
+
+import {
+    Check,
+    Plus,
+    X,
+} from "lucide-react";
+
 export default function ProjectDetailsPage() {
     const params =
         useParams();
@@ -35,6 +49,100 @@ export default function ProjectDetailsPage() {
 
     const [loading, setLoading] =
         useState(true);
+
+    const [employees, setEmployees] =
+        useState<any[]>([]);
+
+    const [addingMember, setAddingMember] =
+        useState(false);
+
+    const [selectedMember, setSelectedMember] =
+        useState("");
+
+    const [showMemberModal, setShowMemberModal] =
+        useState(false);
+
+    const [selectedMembers, setSelectedMembers] =
+        useState<string[]>([]);
+
+    // =========================
+    // HANDLE ADD EMPLOYEES
+    // =========================
+
+    const handleAddMember =
+        async () => {
+            try {
+                if (!selectedMember) {
+                    toast.error(
+                        "Please select employee"
+                    );
+
+                    return;
+                }
+
+                const alreadyExists =
+                    project.teamMembers.some(
+                        (
+                            member: any
+                        ) =>
+                            member._id ===
+                            selectedMember
+                    );
+
+                if (alreadyExists) {
+                    toast.error(
+                        "Employee already added"
+                    );
+
+                    return;
+                }
+
+                setAddingMember(true);
+
+                const updatedMembers =
+                    [
+                        ...project.teamMembers.map(
+                            (
+                                member: any
+                            ) =>
+                                member._id
+                        ),
+
+                        selectedMember,
+                    ];
+
+                await updateProject(
+                    project._id,
+                    {
+                        ...project,
+
+                        lead:
+                            project.lead
+                                ?._id,
+
+                        teamMembers:
+                            updatedMembers,
+                    }
+                );
+
+                toast.success(
+                    "Member added successfully"
+                );
+
+                setSelectedMember("");
+
+                fetchProject();
+            } catch (error) {
+                console.log(error);
+
+                toast.error(
+                    "Failed to add member"
+                );
+            } finally {
+                setAddingMember(false);
+            }
+        };
+
 
     // =========================
     // FETCH PROJECT
@@ -53,6 +161,13 @@ export default function ProjectDetailsPage() {
                 setProject(
                     response.data.project
                 );
+                const employeesRes =
+                    await getEmployeesOnly();
+
+                setEmployees(
+                    employeesRes.data
+                        .employees
+                );
             } catch (error) {
                 console.log(error);
 
@@ -69,6 +184,84 @@ export default function ProjectDetailsPage() {
             fetchProject();
         }
     }, [params.id]);
+
+
+    const openMemberModal =
+        () => {
+            setSelectedMembers(
+                project.teamMembers.map(
+                    (
+                        member: any
+                    ) =>
+                        member._id
+                )
+            );
+
+            setShowMemberModal(true);
+        };
+
+
+    const handleMemberToggle =
+        (
+            employeeId: string
+        ) => {
+            const exists =
+                selectedMembers.includes(
+                    employeeId
+                );
+
+            if (exists) {
+                setSelectedMembers(
+                    selectedMembers.filter(
+                        (id) =>
+                            id !== employeeId
+                    )
+                );
+            } else {
+                setSelectedMembers([
+                    ...selectedMembers,
+                    employeeId,
+                ]);
+            }
+        };
+
+
+    const handleSaveMembers =
+        async () => {
+            try {
+                setAddingMember(true);
+
+                await updateProject(
+                    project._id,
+                    {
+                        ...project,
+
+                        lead:
+                            project.lead
+                                ?._id,
+
+                        teamMembers:
+                            selectedMembers,
+                    }
+                );
+
+                toast.success(
+                    "Members updated successfully"
+                );
+
+                setShowMemberModal(false);
+
+                fetchProject();
+            } catch (error) {
+                console.log(error);
+
+                toast.error(
+                    "Failed to update members"
+                );
+            } finally {
+                setAddingMember(false);
+            }
+        };
 
     // =========================
     // LOADING
@@ -102,240 +295,398 @@ export default function ProjectDetailsPage() {
     }
 
     return (
-        <div>
+        <>
+            <div>
 
-            {/* Header */}
-            <PageHeader
-                title={
-                    project.name
-                }
-                description="Manage project information, members and progress."
-                breadcrumbs={[
-                    {
-                        label: "Projects",
-                        href:
-                            "/admin/projects",
-                    },
-                    {
-                        label:
-                            project.name,
-                    },
-                ]}
-                action={
-                    <div className="flex gap-3">
-
-                        <Button
-                            variant="secondary"
-                            asChild
-                        >
-                            <Link
-                                href={`/admin/projects/${project._id}/edit`}
-                            >
-                                Edit Project
-                            </Link>
-                        </Button>
-
-                        <Button>
-                            Assign Task
-                        </Button>
-                    </div>
-                }
-            />
-
-            <div className="grid gap-6 xl:grid-cols-3">
-
-                {/* Left */}
-                <div className="rounded-3xl border border-border bg-card p-6">
-
-                    {/* Icon */}
-                    <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 text-primary">
-                        <FolderKanban
-                            size={38}
-                        />
-                    </div>
-
-                    {/* Title */}
-                    <h2 className="mt-6 text-3xl font-bold text-foreground">
-                        {project.name}
-                    </h2>
-
-                    {/* Description */}
-                    <p className="mt-4 leading-8 text-muted-foreground">
+                {/* Header */}
+                <PageHeader
+                    title={
+                        project.name
+                    }
+                    description="Manage project information, members and progress."
+                    breadcrumbs={[
                         {
-                            project.description
-                        }
-                    </p>
+                            label: "Projects",
+                            href:
+                                "/admin/projects",
+                        },
+                        {
+                            label:
+                                project.name,
+                        },
+                    ]}
+                    action={
+                        <div className="flex gap-3">
 
-                    {/* Status */}
-                    <div className="mt-6">
+                            <Button
+                                variant="secondary"
+                                asChild
+                            >
+                                <Link
+                                    href={`/admin/projects/${project._id}/edit`}
+                                >
+                                    Edit Project
+                                </Link>
+                            </Button>
 
-                        <span
-                            className={`rounded-full px-4 py-2 text-xs font-medium
+                            <Button>
+                                Assign Task
+                            </Button>
+                        </div>
+                    }
+                />
+
+                <div className="grid gap-6 xl:grid-cols-3">
+
+                    {/* Left */}
+                    <div className="rounded-3xl border border-border bg-card p-6">
+
+                        {/* Icon */}
+                        <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 text-primary">
+                            <FolderKanban
+                                size={38}
+                            />
+                        </div>
+
+                        {/* Title */}
+                        <h2 className="mt-6 text-3xl font-bold text-foreground">
+                            {project.name}
+                        </h2>
+
+                        {/* Description */}
+                        <p className="mt-4 leading-8 text-muted-foreground">
+                            {
+                                project.description
+                            }
+                        </p>
+
+                        {/* Status */}
+                        <div className="mt-6">
+
+                            <span
+                                className={`rounded-full px-4 py-2 text-xs font-medium
               ${project.status ===
-                                    "COMPLETED"
-                                    ? "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400"
-                                    : project.status ===
-                                        "IN_PROGRESS"
-                                        ? "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400"
-                                        : "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400"
-                                }`}
-                        >
-                            {project.status.replace(
-                                "_",
-                                " "
-                            )}
-                        </span>
-                    </div>
+                                        "COMPLETED"
+                                        ? "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400"
+                                        : project.status ===
+                                            "IN_PROGRESS"
+                                            ? "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400"
+                                            : "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400"
+                                    }`}
+                            >
+                                {project.status.replace(
+                                    "_",
+                                    " "
+                                )}
+                            </span>
+                        </div>
 
-                    {/* Info */}
-                    <div className="mt-8 space-y-5">
+                        {/* Info */}
+                        <div className="mt-8 space-y-5">
 
-                        {/* Team */}
-                        <div className="flex items-center gap-4 rounded-2xl border border-border bg-background p-4">
+                            {/* Team */}
+                            <div className="flex items-center gap-4 rounded-2xl border border-border bg-background p-4">
 
-                            <Users
-                                size={20}
-                                className="text-primary"
-                            />
+                                <Users
+                                    size={20}
+                                    className="text-primary"
+                                />
 
-                            <div>
+                                <div>
 
-                                <p className="text-xs text-muted-foreground">
-                                    Team Members
-                                </p>
+                                    <p className="text-xs text-muted-foreground">
+                                        Team Members
+                                    </p>
 
-                                <p className="mt-1 text-sm font-medium text-foreground">
-                                    {
-                                        project
-                                            ?.teamMembers
-                                            ?.length
-                                    }{" "}
-                                    Members
-                                </p>
+                                    <p className="mt-1 text-sm font-medium text-foreground">
+                                        {
+                                            project
+                                                ?.teamMembers
+                                                ?.length
+                                        }{" "}
+                                        Members
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Deadline */}
+                            <div className="flex items-center gap-4 rounded-2xl border border-border bg-background p-4">
+
+                                <CalendarDays
+                                    size={20}
+                                    className="text-primary"
+                                />
+
+                                <div>
+
+                                    <p className="text-xs text-muted-foreground">
+                                        Deadline
+                                    </p>
+
+                                    <p className="mt-1 text-sm font-medium text-foreground">
+                                        {project.deadline
+                                            ? new Date(
+                                                project.deadline
+                                            ).toLocaleDateString()
+                                            : "N/A"}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Lead */}
+                            <div className="flex items-center gap-4 rounded-2xl border border-border bg-background p-4">
+
+                                <Users
+                                    size={20}
+                                    className="text-primary"
+                                />
+
+                                <div>
+
+                                    <p className="text-xs text-muted-foreground">
+                                        Project Lead
+                                    </p>
+
+                                    <p className="mt-1 text-sm font-medium text-foreground">
+                                        {
+                                            project?.lead
+                                                ?.name
+                                        }
+                                    </p>
+                                </div>
                             </div>
                         </div>
 
-                        {/* Deadline */}
-                        <div className="flex items-center gap-4 rounded-2xl border border-border bg-background p-4">
+                        {/* Progress */}
+                        <div className="mt-8">
 
-                            <CalendarDays
-                                size={20}
-                                className="text-primary"
-                            />
+                            <div className="mb-3 flex items-center justify-between">
 
-                            <div>
-
-                                <p className="text-xs text-muted-foreground">
-                                    Deadline
+                                <p className="text-sm font-medium text-foreground">
+                                    Project Progress
                                 </p>
 
-                                <p className="mt-1 text-sm font-medium text-foreground">
-                                    {project.deadline
-                                        ? new Date(
-                                            project.deadline
-                                        ).toLocaleDateString()
-                                        : "N/A"}
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Lead */}
-                        <div className="flex items-center gap-4 rounded-2xl border border-border bg-background p-4">
-
-                            <Users
-                                size={20}
-                                className="text-primary"
-                            />
-
-                            <div>
-
-                                <p className="text-xs text-muted-foreground">
-                                    Project Lead
-                                </p>
-
-                                <p className="mt-1 text-sm font-medium text-foreground">
+                                <p className="text-sm text-primary">
                                     {
-                                        project?.lead
-                                            ?.name
+                                        project.progress
                                     }
+                                    %
                                 </p>
+                            </div>
+
+                            <div className="h-3 rounded-full bg-muted">
+
+                                <div
+                                    className="h-3 rounded-full bg-primary transition-all"
+                                    style={{
+                                        width: `${project.progress}%`,
+                                    }}
+                                />
                             </div>
                         </div>
                     </div>
 
-                    {/* Progress */}
-                    <div className="mt-8">
+                    {/* Right */}
+                    <div className="space-y-6 xl:col-span-2">
 
-                        <div className="mb-3 flex items-center justify-between">
+                        {/* Team Members */}
+                        <div className="rounded-3xl border border-border bg-card p-6">
 
-                            <p className="text-sm font-medium text-foreground">
-                                Project Progress
-                            </p>
+                            <div className="flex items-center justify-between">
 
-                            <p className="text-sm text-primary">
-                                {
-                                    project.progress
-                                }
-                                %
-                            </p>
+                                <div>
+
+                                    <h2 className="text-2xl font-bold text-foreground">
+                                        Team Members
+                                    </h2>
+
+                                    <p className="mt-2 text-muted-foreground">
+                                        Employees working on this project.
+                                    </p>
+                                </div>
+
+                                <Button
+                                    variant="secondary"
+                                    onClick={
+                                        openMemberModal
+                                    }
+                                >
+                                    <Plus size={16} />
+
+                                    Add Member
+                                </Button>
+                            </div>
+
+                            {/* Members */}
+                            <div className="mt-8 space-y-4">
+
+                                {project
+                                    ?.teamMembers
+                                    ?.map(
+                                        (
+                                            member: any
+                                        ) => (
+                                            <div
+                                                key={
+                                                    member._id
+                                                }
+                                                className="flex items-center justify-between rounded-2xl border border-border bg-background p-4"
+                                            >
+
+                                                <div className="flex items-center gap-4">
+
+                                                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white">
+                                                        {member.name
+                                                            ?.split(
+                                                                " "
+                                                            )
+                                                            .map(
+                                                                (
+                                                                    name: string
+                                                                ) =>
+                                                                    name[0]
+                                                            )
+                                                            .join(
+                                                                ""
+                                                            )}
+                                                    </div>
+
+                                                    <div>
+
+                                                        <p className="font-medium text-foreground">
+                                                            {
+                                                                member.name
+                                                            }
+                                                        </p>
+
+                                                        <p className="mt-1 text-sm text-muted-foreground">
+                                                            {
+                                                                member.email
+                                                            }
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <Button
+                                                    variant="secondary"
+                                                    asChild
+                                                >
+                                                    <Link
+                                                        href={`/admin/employees/${member._id}`}
+                                                    >
+                                                        View
+                                                    </Link>
+                                                </Button>
+                                            </div>
+                                        )
+                                    )}
+                            </div>
                         </div>
 
-                        <div className="h-3 rounded-full bg-muted">
+                        {/* Tasks */}
+                        <div className="rounded-3xl border border-border bg-card p-6">
 
-                            <div
-                                className="h-3 rounded-full bg-primary transition-all"
-                                style={{
-                                    width: `${project.progress}%`,
-                                }}
-                            />
+                            <div className="flex items-center justify-between">
+
+                                <div>
+
+                                    <h2 className="text-2xl font-bold text-foreground">
+                                        Recent Tasks
+                                    </h2>
+
+                                    <p className="mt-2 text-muted-foreground">
+                                        Latest tasks assigned in this project.
+                                    </p>
+                                </div>
+
+                                <Button>
+                                    Create Task
+                                </Button>
+                            </div>
+
+                            {/* Empty State */}
+                            <div className="mt-8 flex h-[220px] flex-col items-center justify-center rounded-2xl border border-dashed border-border">
+
+                                <FolderKanban
+                                    size={48}
+                                    className="text-primary"
+                                />
+
+                                <h3 className="mt-4 text-lg font-semibold text-foreground">
+                                    No Tasks Yet
+                                </h3>
+
+                                <p className="mt-2 text-sm text-muted-foreground">
+                                    Tasks will appear here once created.
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
+            {/* Member Modal */}
+            {showMemberModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
 
-                {/* Right */}
-                <div className="space-y-6 xl:col-span-2">
+                    <div className="w-full max-w-3xl rounded-3xl border border-border bg-card p-6 shadow-2xl">
 
-                    {/* Team Members */}
-                    <div className="rounded-3xl border border-border bg-card p-6">
-
+                        {/* Header */}
                         <div className="flex items-center justify-between">
 
                             <div>
 
                                 <h2 className="text-2xl font-bold text-foreground">
-                                    Team Members
+                                    Manage Team Members
                                 </h2>
 
-                                <p className="mt-2 text-muted-foreground">
-                                    Employees working on this project.
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    Add or remove employees from this project.
                                 </p>
                             </div>
 
-                            <Button variant="secondary">
-                                Add Member
-                            </Button>
+                            <button
+                                onClick={() =>
+                                    setShowMemberModal(false)
+                                }
+                                className="flex h-10 w-10 items-center justify-center rounded-xl border border-border transition-all hover:bg-muted"
+                            >
+                                <X size={18} />
+                            </button>
                         </div>
 
-                        {/* Members */}
-                        <div className="mt-8 space-y-4">
+                        {/* Employees */}
+                        <div className="mt-8 grid max-h-[450px] gap-4 overflow-y-auto md:grid-cols-2">
 
-                            {project
-                                ?.teamMembers
-                                ?.map(
-                                    (
-                                        member: any
-                                    ) => (
-                                        <div
+                            {employees.map(
+                                (employee) => {
+                                    const isSelected =
+                                        selectedMembers.includes(
+                                            employee._id
+                                        );
+
+                                    return (
+                                        <button
                                             key={
-                                                member._id
+                                                employee._id
                                             }
-                                            className="flex items-center justify-between rounded-2xl border border-border bg-background p-4"
+                                            type="button"
+                                            onClick={() =>
+                                                handleMemberToggle(
+                                                    employee._id
+                                                )
+                                            }
+                                            className={`flex items-center cursor-pointer justify-between rounded-2xl border p-4 text-left transition-all duration-300
+                                ${isSelected
+                                                    ? "border-primary bg-primary/5"
+                                                    : "border-border hover:border-primary/30 hover:bg-primary/5"
+                                                }`}
                                         >
 
                                             <div className="flex items-center gap-4">
 
+                                                {/* Avatar */}
                                                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white">
-                                                    {member.name
+                                                    {employee.name
                                                         ?.split(
                                                             " "
                                                         )
@@ -350,78 +701,69 @@ export default function ProjectDetailsPage() {
                                                         )}
                                                 </div>
 
+                                                {/* Info */}
                                                 <div>
 
                                                     <p className="font-medium text-foreground">
                                                         {
-                                                            member.name
+                                                            employee.name
                                                         }
                                                     </p>
 
-                                                    <p className="mt-1 text-sm text-muted-foreground">
+                                                    <p className="mt-1 text-xs text-muted-foreground">
                                                         {
-                                                            member.email
+                                                            employee.department
                                                         }
                                                     </p>
                                                 </div>
                                             </div>
 
-                                            <Button
-                                                variant="secondary"
-                                                asChild
+                                            {/* Checkbox */}
+                                            <div
+                                                className={`flex h-6 w-6 items-center justify-center rounded-full border transition-all
+                                    ${isSelected
+                                                        ? "border-primary bg-primary text-white"
+                                                        : "border-border"
+                                                    }`}
                                             >
-                                                <Link
-                                                    href={`/admin/employees/${member._id}`}
-                                                >
-                                                    View
-                                                </Link>
-                                            </Button>
-                                        </div>
-                                    )
-                                )}
+                                                {isSelected && (
+                                                    <Check size={14} />
+                                                )}
+                                            </div>
+                                        </button>
+                                    );
+                                }
+                            )}
                         </div>
-                    </div>
 
-                    {/* Tasks */}
-                    <div className="rounded-3xl border border-border bg-card p-6">
+                        {/* Footer */}
+                        <div className="mt-8 flex items-center justify-end gap-3 border-t border-border pt-6">
 
-                        <div className="flex items-center justify-between">
-
-                            <div>
-
-                                <h2 className="text-2xl font-bold text-foreground">
-                                    Recent Tasks
-                                </h2>
-
-                                <p className="mt-2 text-muted-foreground">
-                                    Latest tasks assigned in this project.
-                                </p>
-                            </div>
-
-                            <Button>
-                                Create Task
+                            <Button
+                                variant="secondary"
+                                onClick={() =>
+                                    setShowMemberModal(false)
+                                }
+                            >
+                                Cancel
                             </Button>
-                        </div>
 
-                        {/* Empty State */}
-                        <div className="mt-8 flex h-[220px] flex-col items-center justify-center rounded-2xl border border-dashed border-border">
-
-                            <FolderKanban
-                                size={48}
-                                className="text-primary"
-                            />
-
-                            <h3 className="mt-4 text-lg font-semibold text-foreground">
-                                No Tasks Yet
-                            </h3>
-
-                            <p className="mt-2 text-sm text-muted-foreground">
-                                Tasks will appear here once created.
-                            </p>
+                            <Button
+                                onClick={
+                                    handleSaveMembers
+                                }
+                                disabled={
+                                    addingMember
+                                }
+                            >
+                                {addingMember
+                                    ? "Saving..."
+                                    : "Save Changes"}
+                            </Button>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            )}
+        </>
     );
 }

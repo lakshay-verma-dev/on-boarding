@@ -6,8 +6,10 @@ import { Loader2 } from "lucide-react";
 
 import PageHeader from "@/components/common/headers/PageHeader";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import {
+    FormInput,
+    FormTextarea,
+} from "@/components/ui/form-fields";
 
 import { useAuthStore } from "@/store/authStore";
 import { getCurrentUser, updateCurrentUser } from "@/services/auth/auth.service";
@@ -190,74 +192,52 @@ export default function SettingsView() {
 
                         <div className="mt-8 grid gap-6 md:grid-cols-2">
                             {/* Full Name */}
-                            <div>
-                                <label className="mb-2 block text-sm font-medium text-foreground">
-                                    Full Name
-                                </label>
-                                <Input
-                                    name="name"
-                                    value={profileData.name}
-                                    onChange={handleProfileChange}
-                                    placeholder="Enter full name"
-                                    className="h-12 rounded-2xl border-border bg-background px-4 hover:border-primary/50 focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 transition-all duration-300"
-                                />
-                            </div>
+                            <FormInput
+                                label="Full Name"
+                                name="name"
+                                value={profileData.name}
+                                onChange={handleProfileChange}
+                                placeholder="Enter full name"
+                            />
 
                             {/* Email */}
-                            <div>
-                                <label className="mb-2 block text-sm font-medium text-foreground">
-                                    Email Address
-                                </label>
-                                <Input
-                                    type="email"
-                                    name="email"
-                                    value={profileData.email}
-                                    onChange={handleProfileChange}
-                                    placeholder="Enter email"
-                                    className="h-12 rounded-2xl border-border bg-background px-4 hover:border-primary/50 focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 transition-all duration-300"
-                                />
-                            </div>
+                            <FormInput
+                                label="Email Address"
+                                type="email"
+                                name="email"
+                                value={profileData.email}
+                                onChange={handleProfileChange}
+                                placeholder="Enter email"
+                            />
 
                             {/* Phone */}
-                            <div>
-                                <label className="mb-2 block text-sm font-medium text-foreground">
-                                    Phone Number
-                                </label>
-                                <Input
-                                    name="phone"
-                                    value={profileData.phone}
-                                    onChange={handleProfileChange}
-                                    placeholder="Enter phone number"
-                                    className="h-12 rounded-2xl border-border bg-background px-4 hover:border-primary/50 focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 transition-all duration-300"
-                                />
-                            </div>
+                            <FormInput
+                                label="Phone Number"
+                                name="phone"
+                                value={profileData.phone}
+                                onChange={handleProfileChange}
+                                placeholder="Enter phone number"
+                            />
 
                             {/* Role */}
-                            <div>
-                                <label className="mb-2 block text-sm font-medium text-foreground">
-                                    Role
-                                </label>
-                                <Input
-                                    disabled
-                                    value={profileData.role}
-                                    className="h-12 rounded-2xl border-border bg-background/50 px-4 opacity-75 cursor-not-allowed"
-                                />
-                            </div>
+                            <FormInput
+                                label="Role"
+                                name="role"
+                                disabled
+                                value={profileData.role}
+                                className="bg-background/50 opacity-75 cursor-not-allowed"
+                            />
                         </div>
 
                         {/* Bio / Address */}
-                        <div className="mt-6">
-                            <label className="mb-2 block text-sm font-medium text-foreground">
-                                Address
-                            </label>
-                            <Textarea
-                                name="address"
-                                value={profileData.address}
-                                onChange={handleProfileChange}
-                                placeholder="Enter address details..."
-                                className="rounded-2xl border-border bg-background px-4 py-3 hover:border-primary/50 focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 min-h-[120px] resize-none transition-all duration-300"
-                            />
-                        </div>
+                        <FormTextarea
+                            label="Address"
+                            name="address"
+                            value={profileData.address}
+                            onChange={handleProfileChange}
+                            placeholder="Enter address details..."
+                            containerClassName="mt-6"
+                        />
                     </div>
 
                     <div className="mt-8">
@@ -292,33 +272,23 @@ export default function SettingsView() {
                         </p>
 
                         <div className="mt-8 space-y-5">
-                            <div>
-                                <label className="mb-2 block text-sm font-medium text-foreground">
-                                    New Password
-                                </label>
-                                <Input
-                                    type="password"
-                                    name="newPassword"
-                                    value={passwordData.newPassword}
-                                    onChange={handlePasswordChange}
-                                    placeholder="••••••••"
-                                    className="h-12 rounded-2xl border-border bg-background px-4 hover:border-primary/50 focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 transition-all duration-300"
-                                />
-                            </div>
+                            <FormInput
+                                label="New Password"
+                                type="password"
+                                name="newPassword"
+                                value={passwordData.newPassword}
+                                onChange={handlePasswordChange}
+                                placeholder="••••••••"
+                            />
 
-                            <div>
-                                <label className="mb-2 block text-sm font-medium text-foreground">
-                                    Confirm Password
-                                </label>
-                                <Input
-                                    type="password"
-                                    name="confirmPassword"
-                                    value={passwordData.confirmPassword}
-                                    onChange={handlePasswordChange}
-                                    placeholder="••••••••"
-                                    className="h-12 rounded-2xl border-border bg-background px-4 hover:border-primary/50 focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 transition-all duration-300"
-                                />
-                            </div>
+                            <FormInput
+                                label="Confirm Password"
+                                type="password"
+                                name="confirmPassword"
+                                value={passwordData.confirmPassword}
+                                onChange={handlePasswordChange}
+                                placeholder="••••••••"
+                            />
                         </div>
                     </div>
 

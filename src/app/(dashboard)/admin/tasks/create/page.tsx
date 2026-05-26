@@ -1,15 +1,58 @@
 "use client";
 
-import PageHeader from "@/components/common/headers/PageHeader";
+import { useState } from "react";
+import { toast } from "sonner";
 
+import PageHeader from "@/components/common/headers/PageHeader";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import {
+    FormInput,
+    FormSelect,
+    FormDatePicker,
+    FormTextarea,
+} from "@/components/ui/form-fields";
+
+const projectOptions = [
+    { value: "hrm-dashboard", label: "HRM Dashboard" },
+    { value: "client-crm", label: "Client CRM" },
+    { value: "finance-tracker", label: "Finance Tracker" },
+];
+
+const employeeOptions = [
+    { value: "john-doe", label: "John Doe" },
+    { value: "sarah-smith", label: "Sarah Smith" },
+    { value: "alex-johnson", label: "Alex Johnson" },
+];
+
+const priorityOptions = [
+    { value: "high", label: "High" },
+    { value: "medium", label: "Medium" },
+    { value: "low", label: "Low" },
+];
+
+const statusOptions = [
+    { value: "pending", label: "Pending" },
+    { value: "in-progress", label: "In Progress" },
+    { value: "completed", label: "Completed" },
+];
 
 export default function CreateTaskPage() {
+    const [title, setTitle] = useState("");
+    const [project, setProject] = useState("");
+    const [assignTo, setAssignTo] = useState("");
+    const [priority, setPriority] = useState("");
+    const [startDate, setStartDate] = useState("");
+    const [dueDate, setDueDate] = useState("");
+    const [status, setStatus] = useState("");
+    const [description, setDescription] = useState("");
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        toast.success("Task created successfully (Mock)!");
+    };
+
     return (
         <div>
-
             {/* Header */}
             <PageHeader
                 title="Create Task"
@@ -17,163 +60,87 @@ export default function CreateTaskPage() {
             />
 
             {/* Form */}
-            <div className="rounded-3xl border border-border bg-card p-8">
-
+            <form onSubmit={handleSubmit} className="rounded-3xl border border-border bg-card p-8">
                 <div className="grid gap-6 md:grid-cols-2">
-
                     {/* Task Title */}
-                    <div>
-                        <label className="mb-2 block text-sm font-medium text-foreground">
-                            Task Title
-                        </label>
-
-                        <Input placeholder="Enter task title" />
-                    </div>
+                    <FormInput
+                        label="Task Title"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder="Enter task title"
+                    />
 
                     {/* Project */}
-                    <div>
-                        <label className="mb-2 block text-sm font-medium text-foreground">
-                            Project
-                        </label>
-
-                        <select className="flex h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-foreground outline-none transition-all focus:border-primary">
-
-                            <option>
-                                Select Project
-                            </option>
-
-                            <option>
-                                HRM Dashboard
-                            </option>
-
-                            <option>
-                                Client CRM
-                            </option>
-
-                            <option>
-                                Finance Tracker
-                            </option>
-                        </select>
-                    </div>
+                    <FormSelect
+                        label="Project"
+                        value={project}
+                        onChange={(e) => setProject(e.target.value)}
+                        options={projectOptions}
+                        placeholder="Select Project"
+                    />
 
                     {/* Assign To */}
-                    <div>
-                        <label className="mb-2 block text-sm font-medium text-foreground">
-                            Assign To
-                        </label>
-
-                        <select className="flex h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-foreground outline-none transition-all focus:border-primary">
-
-                            <option>
-                                Select Employee
-                            </option>
-
-                            <option>
-                                John Doe
-                            </option>
-
-                            <option>
-                                Sarah Smith
-                            </option>
-
-                            <option>
-                                Alex Johnson
-                            </option>
-                        </select>
-                    </div>
+                    <FormSelect
+                        label="Assign To"
+                        value={assignTo}
+                        onChange={(e) => setAssignTo(e.target.value)}
+                        options={employeeOptions}
+                        placeholder="Select Employee"
+                    />
 
                     {/* Priority */}
-                    <div>
-                        <label className="mb-2 block text-sm font-medium text-foreground">
-                            Priority
-                        </label>
-
-                        <select className="flex h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-foreground outline-none transition-all focus:border-primary">
-
-                            <option>
-                                Select Priority
-                            </option>
-
-                            <option>
-                                High
-                            </option>
-
-                            <option>
-                                Medium
-                            </option>
-
-                            <option>
-                                Low
-                            </option>
-                        </select>
-                    </div>
+                    <FormSelect
+                        label="Priority"
+                        value={priority}
+                        onChange={(e) => setPriority(e.target.value)}
+                        options={priorityOptions}
+                        placeholder="Select Priority"
+                    />
 
                     {/* Start Date */}
-                    <div>
-                        <label className="mb-2 block text-sm font-medium text-foreground">
-                            Start Date
-                        </label>
-
-                        <Input type="date" />
-                    </div>
+                    <FormDatePicker
+                        label="Start Date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                    />
 
                     {/* Due Date */}
-                    <div>
-                        <label className="mb-2 block text-sm font-medium text-foreground">
-                            Due Date
-                        </label>
-
-                        <Input type="date" />
-                    </div>
+                    <FormDatePicker
+                        label="Due Date"
+                        value={dueDate}
+                        onChange={(e) => setDueDate(e.target.value)}
+                    />
 
                     {/* Status */}
-                    <div>
-                        <label className="mb-2 block text-sm font-medium text-foreground">
-                            Status
-                        </label>
-
-                        <select className="flex h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-foreground outline-none transition-all focus:border-primary">
-
-                            <option>
-                                Select Status
-                            </option>
-
-                            <option>
-                                Pending
-                            </option>
-
-                            <option>
-                                In Progress
-                            </option>
-
-                            <option>
-                                Completed
-                            </option>
-                        </select>
-                    </div>
+                    <FormSelect
+                        label="Status"
+                        value={status}
+                        onChange={(e) => setStatus(e.target.value)}
+                        options={statusOptions}
+                        placeholder="Select Status"
+                    />
                 </div>
 
                 {/* Description */}
-                <div className="mt-6">
-                    <label className="mb-2 block text-sm font-medium text-foreground">
-                        Task Description
-                    </label>
-
-                    <Textarea placeholder="Write task details..." />
-                </div>
+                <FormTextarea
+                    label="Task Description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Write task details..."
+                    containerClassName="mt-6"
+                />
 
                 {/* Actions */}
                 <div className="mt-8 flex items-center gap-4">
-
-                    <Button>
+                    <Button type="submit">
                         Create Task
                     </Button>
 
-                    <Button variant="secondary">
+                    <Button type="button" variant="secondary">
                         Cancel
                     </Button>
                 </div>
-            </div>
+            </form>
         </div>
     );
 }

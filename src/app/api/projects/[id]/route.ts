@@ -118,7 +118,8 @@ export async function PUT(
                     progress,
                     deadline,
                     lead,
-                    teamMembers,
+                    teamMembers:
+                        teamMembers || [],
                 },
                 {
                     new: true,
