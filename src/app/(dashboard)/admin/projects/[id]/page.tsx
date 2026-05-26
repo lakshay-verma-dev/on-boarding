@@ -35,10 +35,16 @@ import {
 } from "@/services/project/project.service";
 
 import {
+    createTask,
+    getProjectTasks,
+} from "@/services/task/task.service";
+
+import {
     Check,
     Plus,
     X,
 } from "lucide-react";
+import AssignTaskModal from "@/components/common/modals/AssignTaskModal";
 
 export default function ProjectDetailsPage() {
     const params =
@@ -64,6 +70,31 @@ export default function ProjectDetailsPage() {
 
     const [selectedMembers, setSelectedMembers] =
         useState<string[]>([]);
+
+
+    const [tasks, setTasks] =
+        useState<any[]>([]);
+
+    const [showTaskModal, setShowTaskModal] =
+        useState(false);
+
+    const [creatingTask, setCreatingTask] =
+        useState(false);
+
+    const [taskData, setTaskData] =
+        useState({
+            title: "",
+
+            description: "",
+
+            priority: "MEDIUM",
+
+            status: "TODO",
+
+            deadline: "",
+
+            assignedTo: "",
+        });
 
     // =========================
     // HANDLE ADD EMPLOYEES
@@ -168,6 +199,15 @@ export default function ProjectDetailsPage() {
                     employeesRes.data
                         .employees
                 );
+
+                const tasksRes =
+                    await getProjectTasks(
+                        params.id as string
+                    );
+
+                setTasks(
+                    tasksRes.data.tasks
+                );
             } catch (error) {
                 console.log(error);
 
@@ -266,6 +306,78 @@ export default function ProjectDetailsPage() {
     // =========================
     // LOADING
     // =========================
+
+    const handleTaskChange = (
+        e: {
+            target: {
+                name: string;
+                value: any;
+            };
+        }
+    ) => {
+        setTaskData({
+            ...taskData,
+
+            [e.target.name]:
+                e.target.value,
+        });
+    };
+
+
+    const handleCreateTask =
+        async () => {
+            try {
+                if (
+                    !taskData.title ||
+                    !taskData.assignedTo
+                ) {
+                    toast.error(
+                        "Please fill required fields"
+                    );
+
+                    return;
+                }
+
+                setCreatingTask(true);
+
+                await createTask({
+                    ...taskData,
+
+                    project:
+                        project._id,
+                });
+
+                toast.success(
+                    "Task created successfully"
+                );
+
+                setShowTaskModal(false);
+
+                setTaskData({
+                    title: "",
+
+                    description: "",
+
+                    priority: "MEDIUM",
+
+                    status: "TODO",
+
+                    deadline: "",
+
+                    assignedTo: "",
+                });
+
+                fetchProject();
+            } catch (error) {
+                console.log(error);
+
+                toast.error(
+                    "Failed to create task"
+                );
+            } finally {
+                setCreatingTask(false);
+            }
+        };
 
     if (loading) {
         return (
@@ -599,26 +711,111 @@ export default function ProjectDetailsPage() {
                                     </p>
                                 </div>
 
-                                <Button>
+                                <Button
+                                    onClick={() =>
+                                        setShowTaskModal(true)
+                                    }
+                                >
                                     Create Task
                                 </Button>
                             </div>
 
                             {/* Empty State */}
-                            <div className="mt-8 flex h-[220px] flex-col items-center justify-center rounded-2xl border border-dashed border-border">
+                            <div className="mt-8 space-y-4">
 
-                                <FolderKanban
-                                    size={48}
-                                    className="text-primary"
-                                />
+                                {tasks.length === 0 ? (
+                                    <div className="flex h-[220px] flex-col items-center justify-center rounded-2xl border border-dashed border-border">
 
-                                <h3 className="mt-4 text-lg font-semibold text-foreground">
-                                    No Tasks Yet
-                                </h3>
+                                        <FolderKanban
+                                            size={48}
+                                            className="text-primary"
+                                        />
 
-                                <p className="mt-2 text-sm text-muted-foreground">
-                                    Tasks will appear here once created.
-                                </p>
+                                        <h3 className="mt-4 text-lg font-semibold text-foreground">
+                                            No Tasks Yet
+                                        </h3>
+
+                                        <p className="mt-2 text-sm text-muted-foreground">
+                                            Tasks will appear here once created.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    tasks.map(
+                                        (task) => (
+                                            <div
+                                                key={task._id}
+                                                className="rounded-2xl border border-border bg-background p-5"
+                                            >
+
+                                                <div className="flex items-start justify-between">
+
+                                                    <div>
+
+                                                        <h3 className="text-lg font-semibold text-foreground">
+                                                            {task.title}
+                                                        </h3>
+
+                                                        <p className="mt-2 text-sm text-muted-foreground">
+                                                            {
+                                                                task.description
+                                                            }
+                                                        </p>
+                                                    </div>
+
+                                                    <span
+                                                        className={`rounded-full px-3 py-1 text-xs font-medium
+                            ${task.status ===
+                                                                "COMPLETED"
+                                                                ? "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400"
+                                                                : task.status ===
+                                                                    "IN_PROGRESS"
+                                                                    ? "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400"
+                                                                    : "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400"
+                                                            }`}
+                                                    >
+                                                        {task.status.replace(
+                                                            "_",
+                                                            " "
+                                                        )}
+                                                    </span>
+                                                </div>
+
+                                                <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
+
+                                                    <div>
+
+                                                        <p className="text-xs text-muted-foreground">
+                                                            Assigned To
+                                                        </p>
+
+                                                        <p className="mt-1 text-sm font-medium text-foreground">
+                                                            {
+                                                                task
+                                                                    ?.assignedTo
+                                                                    ?.name
+                                                            }
+                                                        </p>
+                                                    </div>
+
+                                                    <div>
+
+                                                        <p className="text-xs text-muted-foreground">
+                                                            Deadline
+                                                        </p>
+
+                                                        <p className="mt-1 text-sm font-medium text-foreground">
+                                                            {task.deadline
+                                                                ? new Date(
+                                                                    task.deadline
+                                                                ).toLocaleDateString()
+                                                                : "N/A"}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )
+                                    )
+                                )}
                             </div>
                         </div>
                     </div>
@@ -764,6 +961,14 @@ export default function ProjectDetailsPage() {
                     </div>
                 </div>
             )}
+            <AssignTaskModal
+                open={showTaskModal}
+                onClose={() =>
+                    setShowTaskModal(false)
+                }
+                project={project}
+                onSuccess={fetchProject}
+            />
         </>
     );
 }
