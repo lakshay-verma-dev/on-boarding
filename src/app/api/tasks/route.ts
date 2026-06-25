@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { connectDB } from "@/lib/mongodb";
-
+import { getAuthUser } from "@/lib/auth";
 import Task from "@/models/Task";
 
 // =========================
@@ -45,6 +45,8 @@ export async function POST(
             );
         }
 
+        const user = await getAuthUser(request);
+
         const task =
             await Task.create({
                 title,
@@ -54,6 +56,7 @@ export async function POST(
                 deadline,
                 project,
                 assignedTo,
+                assignedBy: user?._id || undefined,
             });
 
         return NextResponse.json(

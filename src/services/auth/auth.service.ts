@@ -30,3 +30,11 @@ export const updateCurrentUser =
     async (data: any) => {
         return api.put("/auth/me", data);
     };
+
+export const forgotPassword = async (email: string) => {
+    return api.post("/auth/forgot-password", { email });
+};
+
+export const resetPassword = async (token: string, password: string) => {
+    return api.post("/auth/reset-password", { token, password });
+};
