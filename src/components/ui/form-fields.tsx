@@ -414,9 +414,9 @@ export function FormDatePicker({
         <PopoverContent className="w-auto p-0" align="start">
           <Calendar
             mode={mode as any}
-            selected={dateValue}
+            selected={dateValue as any}
             onSelect={handleSelect}
-            initialFocus
+            autoFocus
           />
         </PopoverContent>
       </Popover>
